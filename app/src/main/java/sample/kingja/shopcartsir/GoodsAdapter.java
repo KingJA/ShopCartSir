@@ -1,5 +1,9 @@
 package sample.kingja.shopcartsir;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +28,7 @@ public class GoodsAdapter extends BaseLvAdapter<Item> {
 
     @Override
     public View simpleGetView(final int position, View convertView, ViewGroup parent) {
-        ViewHolder viewHolder;
+        final ViewHolder viewHolder;
         if (convertView == null) {
             convertView = View
                     .inflate(context, R.layout.item_shopcart, null);
@@ -36,25 +40,63 @@ public class GoodsAdapter extends BaseLvAdapter<Item> {
         final Item item = (Item) getItem(position);
 
         viewHolder.tv_count.setText(String.valueOf(item.getCount()));
+        viewHolder.iv_reduce.setVisibility(item.getCount() > 0 ? View.VISIBLE : View.GONE);
         viewHolder.iv_reduce.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 int count = item.getCount();
-                item.setCount(--count);
+                if (count < 1) {
+                    return;
+                }
+                count--;
+
+                if (count == 0) {
+                    animClose(viewHolder.iv_reduce);
+//                    viewHolder.iv_reduce.setVisibility(View.GONE);
+                }
+                item.setCount(count);
                 notifyDataSetChanged();
+
             }
         });
         viewHolder.iv_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 int count = item.getCount();
-                item.setCount(++count);
+                count++;
+                item.setCount(count);
                 notifyDataSetChanged();
-
-
+                if (count == 1) {
+                    viewHolder.iv_reduce.setVisibility(View.VISIBLE);
+                    animOpen(viewHolder.iv_reduce);
+                }
             }
         });
         return convertView;
+    }
+
+    public void animOpen(final ImageView imageView) {
+        AnimatorSet animatorSet = new AnimatorSet();
+        ObjectAnimator translationAnim = ObjectAnimator.ofFloat(imageView, "translationX", 200, 0);
+        ObjectAnimator rotationAnim = ObjectAnimator.ofFloat(imageView, "rotation", 0, 720);
+        animatorSet.play(translationAnim).with(rotationAnim);
+        animatorSet.setDuration(500).start();
+    }
+
+
+    public void animClose(final ImageView imageView) {
+        AnimatorSet animatorSet = new AnimatorSet();
+        ObjectAnimator translationAnim = ObjectAnimator.ofFloat(imageView, "translationX", 0, 200);
+        ObjectAnimator rotationAnim = ObjectAnimator.ofFloat(imageView, "rotation", 0, 720);
+        animatorSet.play(translationAnim).with(rotationAnim);
+//        animatorSet.addListener(new AnimatorListenerAdapter() {
+//            @Override
+//            public void onAnimationEnd(Animator animation) {
+//                imageView.setVisibility(View.GONE);
+//            }
+//        });
+        animatorSet.setDuration(500).start();
+
     }
 
     @Override
